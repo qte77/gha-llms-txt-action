@@ -1,0 +1,40 @@
+name: Test Action
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Create test template
+        run: |
+          mkdir -p .github/templates
+          cat > .github/templates/llms.txt.tpl << 'TMPL'
+          # ${PROJECT_NAME}
+
+          > ${PROJECT_DESC}
+
+          ## Source
+
+          - [README](${BLOB}/README.md)
+          TMPL
+
+      - name: Run gha-llms-txt-action
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          create_pr: "false"
+
+      - name: Verify output
+        run: |
+          [ -f docs/llms.txt ] || { echo "::error::docs/llms.txt not generated"; exit 1; }
+          echo "--- Generated llms.txt ---"
+          cat docs/llms.txt

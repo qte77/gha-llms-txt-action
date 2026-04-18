@@ -1,0 +1,21 @@
+name: BATS
+
+on:
+  push:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install BATS
+        run: npm install -g bats
+
+      - name: Run BATS tests
+        run: bats tests/unit/
