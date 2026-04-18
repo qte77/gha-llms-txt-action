@@ -1,0 +1,118 @@
+name: "Generate llms.txt"
+description: "Generate llms.txt from a template using envsubst, optionally opening a PR"
+author: "qte77"
+
+branding:
+  icon: "file-text"
+  color: "green"
+
+inputs:
+  template_path:
+    description: "Path to the llms.txt.tpl template file"
+    required: false
+    default: ".github/templates/llms.txt.tpl"
+  output_path:
+    description: "Path for the generated llms.txt output file"
+    required: false
+    default: "docs/llms.txt"
+  validate_links:
+    description: "Whether to validate that template BLOB links point to existing files"
+    required: false
+    default: "true"
+  default_branch:
+    description: "Default branch name used to construct BLOB URLs"
+    required: false
+    default: "main"
+  create_pr:
+    description: "Whether to create a PR with llms.txt changes"
+    required: false
+    default: "true"
+  github_token:
+    description: "GitHub token for API access and PR creation"
+    required: true
+
+outputs:
+  changed:
+    description: "Whether llms.txt changed ('true' or 'false')"
+    value: ${{ steps.check-changes.outputs.changed }}
+  pr_url:
+    description: "URL of the created PR (empty if create_pr is false or no changes)"
+    value: ${{ steps.create-pr.outputs.pr_url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate template exists
+      shell: bash
+      env:
+        TEMPLATE_PATH: ${{ inputs.template_path }}
+      run: |
+        if [ ! -f "$TEMPLATE_PATH" ]; then
+          echo "::error::Template not found: $TEMPLATE_PATH"
+          exit 1
+        fi
+
+    - name: Validate template links
+      if: inputs.validate_links == 'true'
+      shell: bash
+      env:
+        TEMPLATE_PATH: ${{ inputs.template_path }}
+      run: |
+        stale=0
+        for path in $(grep -oE '\$\{BLOB\}/[^)]+' "$TEMPLATE_PATH" | sed 's|\${BLOB}/||'); do
+          if [ ! -f "$path" ]; then
+            echo "::error::Stale link in template: $path"
+            stale=1
+          fi
+        done
+        exit $stale
+
+    - name: Generate llms.txt from template
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        REPO: ${{ github.repository }}
+        DEFAULT_BRANCH: ${{ inputs.default_branch }}
+        TEMPLATE_PATH: ${{ inputs.template_path }}
+        OUTPUT_PATH: ${{ inputs.output_path }}
+      run: |
+        BLOB="https://github.com/${REPO}/blob/${DEFAULT_BRANCH}"
+        PROJECT_NAME=$(sed -n 's/^# //p' README.md | head -1)
+        PROJECT_DESC=$(curl -sf -H "Authorization: token ${GH_TOKEN}" \
+          "https://api.github.com/repos/${REPO}" | jq -r '.description // empty')
+        export BLOB PROJECT_NAME PROJECT_DESC
+        mkdir -p "$(dirname "$OUTPUT_PATH")"
+        envsubst '${BLOB} ${PROJECT_NAME} ${PROJECT_DESC}' < "$TEMPLATE_PATH" > "$OUTPUT_PATH"
+
+    - name: Check for changes
+      id: check-changes
+      shell: bash
+      env:
+        OUTPUT_PATH: ${{ inputs.output_path }}
+      run: |
+        git add "$OUTPUT_PATH"
+        if git diff --cached --quiet; then
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+          echo "No llms.txt changes detected"
+        else
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "llms.txt changes detected"
+        fi
+
+    - name: Create PR
+      id: create-pr
+      if: inputs.create_pr == 'true' && steps.check-changes.outputs.changed == 'true'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        BRANCH="auto/llms-txt-update-$(date +%Y%m%d-%H%M%S)"
+        git checkout -b "$BRANCH"
+        git commit -m "docs: update llms.txt"
+        git push -u origin "$BRANCH"
+        PR_URL=$(gh pr create --base main --head "$BRANCH" \
+          --title "docs: update llms.txt" \
+          --body "Auto-generated llms.txt update by [gha-llms-txt-action](https://github.com/qte77/gha-llms-txt-action)")
+        echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
