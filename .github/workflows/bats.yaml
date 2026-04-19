@@ -15,6 +15,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install BATS
+        # FIXME: sudo required due to EACCES on /usr/local/share/man — use bats-core/bats-core action or apt instead
         run: sudo npm install -g bats
 
       - name: Run BATS tests
