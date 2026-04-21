@@ -5,7 +5,7 @@
 ![Test Action](https://github.com/qte77/gha-llms-txt-action/actions/workflows/test-action.yaml/badge.svg)
 ![CodeFactor](https://www.codefactor.io/repository/github/qte77/gha-llms-txt-action/badge)
 ![CodeQL](https://github.com/qte77/gha-llms-txt-action/actions/workflows/codeql.yaml/badge.svg)
-![Dependabot](https://img.shields.io/badge/dependabot-enabled-025e8c)
+[![Dependabot Updates](https://github.com/qte77/gha-llms-txt-action/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/qte77/gha-llms-txt-action/actions/workflows/dependabot/dependabot-updates)
 ![BATS](https://github.com/qte77/gha-llms-txt-action/actions/workflows/bats.yaml/badge.svg)
 
 Composite GitHub Action that generates `llms.txt` from a template using `envsubst`, optionally opening a pull request with the results.
