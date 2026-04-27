@@ -55,7 +55,7 @@ jobs:
       - uses: qte77/gha-llms-txt-action@v0.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-```text
+```
 
 ## Template variables
 
