@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install BATS
         # FIXME: sudo required due to EACCES on /usr/local/share/man — use bats-core/bats-core action or apt instead
