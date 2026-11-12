@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Release workflows re-pinned to `qte77/.github@43ad121`. `tag-release` now also publishes the GitHub Release for a new tag in the same run, chained on the reusable's new `tag` output, so a merged bump no longer needs a manual `publish-release` dispatch (it stays as a retry). Upstream, the bump commit is now created through `createCommitOnBranch`, so GitHub signs it; the new optional App-token inputs stay unset.
 
+### Security
+
+- Pinned every remaining `uses:` ref in `.github/workflows/*` to its commit SHA (`actions/checkout@v7`, `github/codeql-action/{init,analyze}@v4`); the `qte77/.github` reusable callers were already SHA-pinned. No version changes.
+- `.github/dependabot.yml`: grouped `github-actions` updates (`github-codeql-action`, `actions-security-updates`, `actions-version-updates` with major bumps left ungrouped) so routine Actions bumps land as fewer, reviewable PRs.
+
 ## [0.1.0] - 2026-04-19
 
 ### Added
