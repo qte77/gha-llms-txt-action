@@ -13,4 +13,4 @@ permissions:
 
 jobs:
   lint-actions:
-    uses: qte77/.github/.github/workflows/lint-actions.yml@afd639d96fffa8e59873a9b352d575a9a627236d  # 2026-11-12
+    uses: qte77/.github/.github/workflows/lint-actions.yml@4613389d22779a8d8ba623a418f7c94415e49da9  # 2026-11-12
