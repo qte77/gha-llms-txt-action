@@ -42,8 +42,25 @@
   grep -q "envsubst" action.yml
 }
 
+@test "action.yml has derive_from_frontmatter input defaulting to false" {
+  grep -q "derive_from_frontmatter:" action.yml
+  grep -A3 "derive_from_frontmatter:" action.yml | grep -q 'default: "false"'
+}
+
+@test "action.yml has Resolve frontmatter placeholders step" {
+  grep -q "Resolve frontmatter placeholders" action.yml
+}
+
+@test "scripts/derive-frontmatter.sh exists" {
+  [ -f scripts/derive-frontmatter.sh ]
+}
+
 @test "README.md exists" {
   [ -f README.md ]
+}
+
+@test "README.md documents derive_from_frontmatter" {
+  grep -q "derive_from_frontmatter" README.md
 }
 
 @test "LICENSE exists" {
