@@ -82,13 +82,19 @@ YAML frontmatter instead of being hard-coded in the template, so the two cannot 
 - [${DOC_TITLE:docs/ingest.md|Ingest}](${BLOB}/docs/ingest.md): ${DOC_PURPOSE:docs/ingest.md|Ingest stage overview}
 ```
 
-- `path` is relative to the repository root. Absolute paths, `..` segments and symlinks are not read.
-- Only a leading `---` block (first line of the file) counts as frontmatter; a later `---` in the body is ignored.
+- `path` is relative to the repository root. Absolute paths, `..` segments, unreadable files and
+  paths with a symlink anywhere along them are not read.
+- Only a leading `---` block counts as frontmatter: line 1 must be exactly `---` (no byte order mark,
+  no trailing space). A later `---` in the body is ignored.
+- Single-line values only: a block scalar (`|`, `>`) gives the fallback. If a key appears twice, the
+  first one wins, even when it is empty.
+- Values are inserted as written, without escaping, so a value can contain markdown (for example a
+  `]` that ends the link text). They come from the repository's own files.
 - Surrounding single or double quotes are stripped; values may contain `:`.
 - `Fallback` is used when the file, the frontmatter or the key is missing or empty. It may not
   contain `}` or a newline. Without `|Fallback` the placeholder becomes an empty string.
 - With the flag off (the default) the template is used as written, exactly as before.
-- When `validate_links` is `true`, the paths inside `DOC_*` placeholders must exist too.
+- When `validate_links` is `true`, every `DOC_*` path must pass the same checks, or the step fails.
 
 ## What it does
 

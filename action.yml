@@ -16,7 +16,7 @@ inputs:
     required: false
     default: "docs/llms.txt"
   validate_links:
-    description: "Whether to validate that template BLOB links point to existing files"
+    description: "Whether to validate that template BLOB links (and DOC_* paths, when derive_from_frontmatter is true) point to existing files"
     required: false
     default: "true"
   default_branch:
@@ -72,12 +72,8 @@ runs:
           fi
         done
         if [ "$DERIVE" = "true" ]; then
-          while IFS= read -r path; do
-            if [ ! -f "$path" ]; then
-              echo "::error::Stale DOC_* path in template: $path"
-              stale=1
-            fi
-          done < <(bash "$ACTION_PATH/scripts/derive-frontmatter.sh" --list-paths "$TEMPLATE_PATH")
+          # Same refusals as the resolver; a non-zero exit (bad path or script error) fails the step.
+          bash "$ACTION_PATH/scripts/derive-frontmatter.sh" --check-paths "$TEMPLATE_PATH" || stale=1
         fi
         exit $stale
 
