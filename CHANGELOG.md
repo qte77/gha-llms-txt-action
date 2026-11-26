@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Opt-in input `derive_from_frontmatter` (default `false`): resolves `${DOC_TITLE:path|Fallback}` and `${DOC_PURPOSE:path|Fallback}` template placeholders from the leading YAML frontmatter (`title:`, `purpose:`) of the named file via the new `scripts/derive-frontmatter.sh` (bash and awk, no yq), before `envsubst`. A missing file, frontmatter or key uses the fallback; `validate_links` also checks the `DOC_*` paths. With the flag off, output is unchanged. Includes bats behavior tests and golden-output fixtures under `tests/fixtures/frontmatter/` (#6)
 - Release workflows as thin callers of the `qte77/.github` reusables: `bump-version` (dispatch, opens a signed bump PR), `tag-release` (tags `vX.Y.Z` when the `pyproject.toml` version changes on `main`) and `publish-release` (dispatch, GitHub Release from the CHANGELOG block); none of them delete or overwrite tags or releases (#16)
 - `.github/workflows/lint-actions.yml`: adopt the shared `qte77/.github` reusable `lint-actions` gate (actionlint + yamllint + zizmor) on push/PR/dispatch to `main` (#17)
 

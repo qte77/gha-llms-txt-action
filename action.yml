@@ -27,6 +27,10 @@ inputs:
     description: "Whether to create a PR with llms.txt changes"
     required: false
     default: "true"
+  derive_from_frontmatter:
+    description: "Resolve ${DOC_TITLE:path|Fallback} and ${DOC_PURPOSE:path|Fallback} template placeholders from each file's leading YAML frontmatter (title:, purpose:)"
+    required: false
+    default: "false"
   github_token:
     description: "GitHub token for API access and PR creation"
     required: true
@@ -57,6 +61,8 @@ runs:
       shell: bash
       env:
         TEMPLATE_PATH: ${{ inputs.template_path }}
+        DERIVE: ${{ inputs.derive_from_frontmatter }}
+        ACTION_PATH: ${{ github.action_path }}
       run: |
         stale=0
         for path in $(grep -oE '\$\{BLOB\}/[^)]+' "$TEMPLATE_PATH" | sed 's|\${BLOB}/||'); do
@@ -65,7 +71,27 @@ runs:
             stale=1
           fi
         done
+        if [ "$DERIVE" = "true" ]; then
+          while IFS= read -r path; do
+            if [ ! -f "$path" ]; then
+              echo "::error::Stale DOC_* path in template: $path"
+              stale=1
+            fi
+          done < <(bash "$ACTION_PATH/scripts/derive-frontmatter.sh" --list-paths "$TEMPLATE_PATH")
+        fi
         exit $stale
+
+    - name: Resolve frontmatter placeholders
+      id: derive
+      if: inputs.derive_from_frontmatter == 'true'
+      shell: bash
+      env:
+        TEMPLATE_PATH: ${{ inputs.template_path }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        resolved="${RUNNER_TEMP}/llms.txt.resolved.tpl"
+        bash "$ACTION_PATH/scripts/derive-frontmatter.sh" "$TEMPLATE_PATH" > "$resolved"
+        echo "template=$resolved" >> "$GITHUB_OUTPUT"
 
     - name: Generate llms.txt from template
       shell: bash
@@ -73,7 +99,7 @@ runs:
         GH_TOKEN: ${{ inputs.github_token }}
         REPO: ${{ github.repository }}
         DEFAULT_BRANCH: ${{ inputs.default_branch }}
-        TEMPLATE_PATH: ${{ inputs.template_path }}
+        TEMPLATE_PATH: ${{ steps.derive.outputs.template || inputs.template_path }}
         OUTPUT_PATH: ${{ inputs.output_path }}
       run: |
         BLOB="https://github.com/${REPO}/blob/${DEFAULT_BRANCH}"
